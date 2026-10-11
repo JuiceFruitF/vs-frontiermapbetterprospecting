@@ -6,13 +6,13 @@
     "Olendril"
   ],
   "description": "Adds BetterEr Prospecting density readings to Frontier's Map prospecting measurements.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "side": "Universal",
   "requiredOnClient": true,
   "requiredOnServer": true,
   "dependencies": {
-    "game": "",
-    "bettererprospecting": "",
-    "frontiersmap": ""
+    "game": "1.22.0",
+    "bettererprospecting": "3.4.12",
+    "frontiersmap": "2.0.1"
   }
 }

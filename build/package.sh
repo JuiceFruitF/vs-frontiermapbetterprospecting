@@ -5,17 +5,16 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 configuration="${1:-Release}"
 output_dir="$project_root/artifacts/package"
 package_name="frontiermapbetterprospecting"
-vintage_story_path="${VintageStoryPath:-${VINTAGE_STORY_PATH:?Set VintageStoryPath or VINTAGE_STORY_PATH first}}"
 dll_path="$project_root/src/bin/$configuration/net10.0/FrontierMapBetterProspecting.dll"
 
 dotnet build "$project_root/src/FrontierMapBetterProspecting.csproj" \
-  --configuration "$configuration" \
-  -p:VintageStoryPath="$vintage_story_path"
+  --configuration "$configuration"
 
-rm -rf "$output_dir"
+rm -rf "$output_dir/stage"
 mkdir -p "$output_dir/stage"
 cp "$project_root/modinfo.json" "$output_dir/stage/modinfo.json"
 cp "$dll_path" "$output_dir/stage/FrontierMapBetterProspecting.dll"
+rm -f "$output_dir/$package_name.zip"
 
 (
   cd "$output_dir/stage"

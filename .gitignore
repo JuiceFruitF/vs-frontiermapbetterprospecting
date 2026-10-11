@@ -1,4 +1,7 @@
-references/
+bin/
+obj/
 artifacts/
-src/bin/
-src/obj/
+references/*.dll
+.idea/
+*.user
+Directory.Build.props.local

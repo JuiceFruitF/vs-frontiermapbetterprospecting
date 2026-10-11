@@ -13,8 +13,9 @@
     <EnableRuntimePackDownload>false</EnableRuntimePackDownload>
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <VintageStoryPath Condition="'$(VintageStoryPath)' == ''">$(VINTAGE_STORY_PATH)</VintageStoryPath>
-    <FrontiersMapPath Condition="'$(FrontiersMapPath)' == ''">$(MSBuildProjectDirectory)/../references/frontiers-map-net10_2.0.1/ItemFrontiersMap.dll</FrontiersMapPath>
-    <BetterErProspectingPath Condition="'$(BetterErProspectingPath)' == ''">$(MSBuildProjectDirectory)/../references/bettererprospecting_3.4.5/BetterErProspecting.dll</BetterErProspectingPath>
+    <VintageStoryPath Condition="'$(VintageStoryPath)' == ''">$(VINTAGE_STORY)</VintageStoryPath>
+    <FrontiersMapPath Condition="'$(FrontiersMapPath)' == ''">$(MSBuildProjectDirectory)/../references/ItemFrontiersMap.dll</FrontiersMapPath>
+    <BetterErProspectingPath Condition="'$(BetterErProspectingPath)' == ''">$(MSBuildProjectDirectory)/../references/BetterErProspecting.dll</BetterErProspectingPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,53 +1,38 @@
 # Frontier Map Better Prospecting Compatibility
 
-This Vintage Story compatibility mod forwards completed prospecting density
-readings from BetterEr Prospecting to Frontier's Map.
+Fork of [Olendril's compatibility mod](https://github.com/olendril/vs-frontiermapbetterprospecting), updated and checked against **Frontier's Map 2.0.1**, **BetterEr Prospecting 3.4.12**, and **Vintage Story 1.22.7** (.NET 10).
 
-BetterEr Prospecting's density mode does not call the vanilla
-`ItemProspectingPick.PrintProbeResults` method patched by Frontier's Map. This
-mod instead listens at `ModSystemOreMap.DidProbe`, where the final reading is
-already available, and sends that exact reading through Frontier's existing
-network, naming-dialog, storage, and prospecting-pin workflow. Map tooltips
-include the vanilla quality label (Very poor through Ultra high) and show two
-decimal places, so a value such as 0.03 is retained.
+Completed density readings go through Frontier's existing network, naming dialog, ledger, and map-pin workflow. The integration forwards the final BetterEr reading instead of generating a second vanilla reading. Quality labels use BetterEr's multiplier, and densities retain their original precision. Frontier's Map 2.0.1 already displays two decimal places in the ledger and pin tooltips; no renderer patch is needed.
 
-Frontier's Map 2.0 moved the saved-reading renderer into `DrawProspEntry`.
-Version 2.0.1 already formats readings to two decimal places; the compatibility
-patch accepts that format and still upgrades `0.0` to `0.00` on earlier
-versions. It retains the older `OnDrawProspectingPanel` fallback.
+Stone-search readings are excluded. Node, proximity, and borehole modes keep their existing behavior. An empty density reading still opens Frontier's normal naming dialog. The original Frontier prospecting postfix is removed while the bridge is active to avoid duplicate dialogs, and restored when the compatibility mod is disposed.
 
-The compatibility applies to density readings. BetterEr's node, proximity,
-stone, and borehole search modes are intentionally unchanged.
+## Install
 
-## Requirements
+Install `artifacts/package/frontiermapbetterprospecting.zip` alongside Frontier's Map 2.0.1 and BetterEr Prospecting 3.4.12 on both the client and server. Replace any previous `frontiermapbetterprospecting` ZIP; the mod ID is retained from upstream.
 
-- Vintage Story 1.22 or later
-- BetterEr Prospecting
-- Frontier's Map
+These versions are minimum requirements in the manifest. Later versions may need another compatibility check.
 
-The manifest checks only that both mods are present; it does not pin their
-versions.
+## Build and package
 
-## Build
-
-Set `VINTAGE_STORY_PATH` to a Vintage Story installation containing the .NET 10
-game assemblies, then run:
+1. Install the .NET 10 SDK.
+2. Extract `ItemFrontiersMap.dll` from Frontier's Map 2.0.1 into `references/`.
+3. Extract `BetterErProspecting.dll` from BetterEr Prospecting 3.4.12 into `references/`.
+4. Set `VINTAGE_STORY_PATH` (or `VINTAGE_STORY`) to your Vintage Story installation.
 
 ```sh
-dotnet build src/FrontierMapBetterProspecting.csproj -c Release
+export VINTAGE_STORY_PATH=/path/to/vintagestory
+dotnet build bettererprospectingfrontiermapcompat.sln -c Release
+bash build/package.sh
 ```
 
-The bundled reference DLLs are compile-time inputs only and are not copied into
-the build output.
+Alternatively, set `VintageStoryPath` in the ignored `Directory.Build.props.local` file. Override DLL locations with MSBuild properties `FrontiersMapPath` and `BetterErProspectingPath`. Reference DLLs are compile-time inputs and are excluded from the mod ZIP.
 
-## Package
+## Validation
 
 ```sh
-VINTAGE_STORY_PATH=/path/to/vintagestory ./build/package.sh
+dotnet run --project tests/CompatibilityChecks.csproj -c Release
 ```
 
-The finished archive is written to:
+The checks use the actual game and mod assemblies to validate packet precision, BetterEr quality boundaries, stone-mode exclusion, Harmony patch installation and forwarding, and patch cleanup. An in-game check is still needed for the complete GUI workflow: take a density reading, name it once, add it from the ledger, and verify the map tooltip. Repeat with vanilla/one-shot density enabled and on a dedicated server, then confirm stone and node modes do not open an ore-reading dialog.
 
-```text
-artifacts/package/frontiermapbetterprospecting.zip
-```
+Upstream source: commit `eb8279a` on `olendril/vs-frontiermapbetterprospecting/main`. Original author credit is retained. Upstream does not include a license file.

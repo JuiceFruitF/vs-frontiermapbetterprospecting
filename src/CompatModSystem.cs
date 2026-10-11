@@ -14,6 +14,7 @@ public sealed class CompatModSystem : ModSystem
     private Harmony? harmony;
     private MethodInfo? frontierOriginal;
     private MethodInfo? frontierPostfix;
+    private Patch? removedPostfix;
 
     public override double ExecuteOrder() => 1.0;
 
@@ -59,7 +60,6 @@ public sealed class CompatModSystem : ModSystem
             harmony = new Harmony(HarmonyId);
             ProspectingResultBridge.Configure(networkHandler, Mod.Logger);
             harmony.CreateClassProcessor(typeof(OreMapDidProbePatch)).Patch();
-            harmony.CreateClassProcessor(typeof(ProspectingTooltipPatch)).Patch();
             RemoveFrontiersOriginalPostfix();
 
             Mod.Logger.Notification(
@@ -69,6 +69,7 @@ public sealed class CompatModSystem : ModSystem
         catch (Exception exception)
         {
             harmony?.UnpatchAll(HarmonyId);
+            RestoreFrontiersOriginalPostfix();
             harmony = null;
             ProspectingResultBridge.Clear();
             Mod.Logger.Error(
@@ -93,14 +94,45 @@ public sealed class CompatModSystem : ModSystem
             return;
         }
 
+        removedPostfix = patchInfo!.Postfixes.Single(patch => patch.PatchMethod == frontierPostfix);
         harmony!.Unpatch(frontierOriginal!, frontierPostfix!);
+    }
+
+    private void RestoreFrontiersOriginalPostfix()
+    {
+        if (removedPostfix is null || frontierOriginal is null || frontierPostfix is null)
+        {
+            return;
+        }
+
+        // Restore the patch under its original owner so Frontier's own cleanup still works.
+        if (Harmony.GetPatchInfo(frontierOriginal)?.Postfixes.Any(
+            patch => patch.PatchMethod == frontierPostfix
+        ) != true)
+        {
+            new Harmony(removedPostfix.owner).Patch(
+                frontierOriginal,
+                postfix: new HarmonyMethod(frontierPostfix)
+                {
+                    priority = removedPostfix.priority,
+                    before = removedPostfix.before,
+                    after = removedPostfix.after
+                }
+            );
+        }
+
+        removedPostfix = null;
     }
 
     public override void Dispose()
     {
-        harmony?.UnpatchAll(HarmonyId);
-        harmony = null;
-        ProspectingResultBridge.Clear();
+        if (harmony is not null)
+        {
+            harmony.UnpatchAll(HarmonyId);
+            RestoreFrontiersOriginalPostfix();
+            harmony = null;
+            ProspectingResultBridge.Clear();
+        }
         base.Dispose();
     }
 }

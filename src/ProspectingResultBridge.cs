@@ -1,4 +1,5 @@
 using FrontiersMap;
+using BetterErProspecting.Config;
 using Vintagestory.API.Config;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -33,6 +34,12 @@ internal static class ProspectingResultBridge
         try
         {
             var packet = CreatePacket(reading, player.LanguageCode);
+            // Stone mode also calls DidProbe. Do not open an ore-measurement dialog for it.
+            if (reading.OreReadings?.Count > 0 && packet.OreCodes.Count == 0)
+            {
+                return;
+            }
+
             networkHandler.SendProspectingResultToClient(player, packet);
         }
         catch (Exception exception)
@@ -67,7 +74,11 @@ internal static class ProspectingResultBridge
 
         foreach (var (oreCode, oreReading) in reading.OreReadings)
         {
-            if (string.IsNullOrWhiteSpace(oreCode) || oreReading is null)
+            if (
+                string.IsNullOrWhiteSpace(oreCode)
+                || oreReading is null
+                || oreCode.StartsWith("rock-", StringComparison.Ordinal)
+            )
             {
                 continue;
             }
@@ -82,7 +93,7 @@ internal static class ProspectingResultBridge
 
     private static string GetQualityLabel(double totalFactor, string? languageCode)
     {
-        var qualityIndex = Math.Clamp((int)(totalFactor * 7.5), 0, 5);
+        var qualityIndex = (int)Math.Clamp(totalFactor * Constants.LinearFactorValue, 0, 5);
         var key = qualityIndex switch
         {
             0 => "propick-density-verypoor",
